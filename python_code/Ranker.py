@@ -1,3 +1,24 @@
+import csv
+import pandas as pd
+class Ranker:
+  def __init__(self, path):
+    self.page_rank_df = pd.read_csv(path)
+
+  def read_page_rank(self, path):
+     self.page_rank_df = pd.read_csv(path)
+
+  def get_page_rank_by_ids(self, page_ids):
+      relevence = self.page_rank_df[self.page_rank_df['id'].isin(page_ids)]
+      outpot_lst = [-1]*len(page_ids)
+      for index, row in relevence.iterrows():
+          outpot_lst[page_ids.index(row['id'])] = row['rank']
+      for i in range(len(outpot_lst)):
+        if outpot_lst[i] == -1:
+          outpot_lst[i]=0
+      return outpot_lst
+
+
+
 # -*- coding: utf-8 -*-
 """assignment_4.ipynb
 
@@ -715,7 +736,7 @@ index_titles = InvertedIndex(docs=cran_txt_data_titles)
 index_text = InvertedIndex(docs=cran_txt_data_text)
 
 # create directories for the different indices 
-!mkdir body_index title_index
+# !mkdir body_index title_index
 
 index_titles.write('title_index','title')
 index_text.write('body_index','body')

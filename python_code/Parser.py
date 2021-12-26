@@ -15,7 +15,6 @@ from pathlib import Path
 from nltk.stem.porter import *
 from nltk.corpus import stopwords
 
-import wget as wget
 import mwparserfromhell as mwp
 
 mwp.definitions.INVISIBLE_TAGS.append('ref')
@@ -50,7 +49,19 @@ class Parser:
 
         self.en_stopwords = frozenset(stopwords.words('english'))
 
+        stop = frozenset(self.get_corpus_stopwords()).union(stopwords.words('english'))
+        # stop_rare = stop.union(corpus_rarewords)
         self.stemmer = PorterStemmer()
+
+    def get_corpus_stopwords(self):
+        """ Returns a list of corpus stopwords """
+        # YOUR CODE HERE
+        corpus_stopwords_lst = ["category", "references", "also", "external", "links",
+                                                    "may", "first", "see", "history", "people", "one", "two",
+                                                    "part", "thumb", "including", "second", "following",
+                                                    "many", "however", "would", "became"]
+        return corpus_stopwords_lst
+        # raise NotImplementedError()
 
     def page_iter(self):  # , wiki_file):
         """ Reads a wiki dump file and create a generator that yields pages.
@@ -148,23 +159,16 @@ class Parser:
         return links
 
     """# 2. Tokenization
-  
-  Before tokenizing Wikipedia articles' text we need to remove any remaining MediaWiki markdown from the text. Luckily, our parser knows how to strip all markdown as demonstrated by the following example:
-  """
+    Before tokenizing Wikipedia articles' text we need to remove any remaining MediaWiki markdown from the text. Luckily, our parser knows how to strip all markdown as demonstrated by the following example:
+    """
 
     def remove_markdown(self, text):
         return mwp.parse(text).strip_code()
 
-    # print(remove_markdown("""
-    # == Section 2 ==
-    # [[File:image1.jpg| '''''beautiful''''' <b>image</b> of [[Wikipedia]]]]
-    # """))
-
     """Great! now we can focus on tokenzing the clean text. Here's the clean text of one article after preprocessing:"""
 
-    """**YOUR TASK (70 POINTS)**: Complete the implementation of the functions in the next cell that return regular expressions (as strings) to capture dates, time, etc. in the text. """
-
-    # YOUR CODE HERE
+    def remove_signs_pattern(self, text):
+        return text.replace("?", "")
 
     def get_html_pattern(self):
         """ Return a string regex pattern for capturing HTML tags. No need to handle
@@ -220,6 +224,7 @@ class Parser:
         return r'((?<=(\s))|(?<=(^)))([a-zA-z]+)(\'[a-zA-Z]*)?(\-[a-zA-Z]+)*'
 
     def tokenize(self, text):
+        text = self.remove_signs_pattern(text)
         return [(v, k) for match in self.RE_TOKENIZE.finditer(text)
                 for k, v in match.groupdict().items()
                 if v is not None and k != 'SPACE']
@@ -227,86 +232,6 @@ class Parser:
     # html basic tests (7 points)
     def tok(self, text):
         return self.tokenize(self.remove_markdown(text))
-
-    # tokens = tok(r'<nowiki><b>hello</b></nowiki>')
-    # print(tokens)
-    # assert ('<b>', 'HTMLTAG') in tokens
-    # assert ('</b>', 'HTMLTAG') in tokens
-    # tokens = tok(r'<nowiki><b style="color:red">hello</b></nowiki>')
-    # assert ('<b style="color:red">', 'HTMLTAG') in tokens
-    # tokens = tok(r'<nowiki><br /></nowiki>')
-    # assert ('<br />', 'HTMLTAG') in tokens
-    #
-    # # html advanced tests (6 points)
-    # tokens = tok(r'<nowiki><b><i>hello</i></b></nowiki>')
-    # assert 4 == sum([1 for _, t in tokens if t == 'HTMLTAG'])
-    #
-    # # dates basic tests (7 points)
-    # tokens = tok(r'dates in the format of January 29, 1984, Nov 3, 2020, or 3 Nov 2020.')
-    # assert ('January 29, 1984', 'DATE') in tokens
-    # assert ('Nov 3, 2020', 'DATE') in tokens
-    # assert ('3 Nov 2020', 'DATE') in tokens
-    #
-    # # dates advanced tests (6 points)
-    # tokens = tok(r'Sep 29, 1984, Apr 33, 2020, or 30 feb 2020.')
-    # print(tokens)
-    # assert ('Sep 29, 1984', 'DATE') in tokens
-    # assert ('Apr 33, 2020', 'DATE') not in tokens
-    # assert ('30 feb 2020', 'DATE') not in tokens
-    #
-    # # time basic tests (7 points)
-    # tokens = tok(r'12.12PM 1202a.m. 6:12:12')
-    # print(tokens)
-    # assert ('12.12PM', 'TIME') in tokens
-    # assert ('1202a.m.', 'TIME') in tokens
-    # assert ('6:12:12', 'TIME') in tokens
-    #
-    # # time advanced tests (6 points)
-    # tokens = tok(r'36.12PM 1272a.m. 1202a.m 12:12:12am 56:12:12 6:72:12')
-    # print(tokens)
-    # assert 0 == sum([1 for _, t in tokens if t == 'TIME'])
-    #
-    # # number basic tests (7 points)
-    # tokens = tok(r"""12 +12 -12.0 -12,345.5466 +12,345,678,678 0.154""")
-    # print(tokens)
-    # assert ('12', 'NUMBER') in tokens
-    # assert ('+12', 'NUMBER') in tokens
-    # assert ('-12.0', 'NUMBER') in tokens
-    # assert ('-12,345.5466', 'NUMBER') in tokens
-    # assert ('+12,345,678,678', 'NUMBER') in tokens
-    # assert ('0.154', 'NUMBER') in tokens
-    #
-    # # number advanced tests (6 points)
-    # print(tok('the pound (500 in value)...'))
-    # assert ('500', 'NUMBER') in tok('the pound (500 in value)...')
-    # assert ('500', 'NUMBER') in tok('the price is 500.')
-    # assert ('500', 'NUMBER') in tok('the price is 500, but it is negotiable.')
-    # assert ('500', 'NUMBER') in tok('the price is 500: no less!')
-    # assert ('500', 'NUMBER') not in tok('the price rose 500%')
-    # tokens = tok(r"""12.A W12 +-12 -.12.0 -12,34.5466 +12,345,6+78,678 0.15,4""")
-    # print(tokens)
-    # assert 0 == sum([1 for _, t in tokens if t == 'NUMBER'])
-    #
-    #
-    #
-    # # word tests (13 points)
-    # tokens = tok(r"""Hello Bob! It's Mary, your mother-in-law,
-    #   the mistake is your parents'! --Mom""")
-    # print(tokens)
-    # assert ('Hello', 'WORD') in tokens
-    # assert ('Bob', 'WORD') in tokens
-    # assert ("It's", 'WORD') in tokens
-    # assert ('Mary', 'WORD') in tokens
-    # assert ('your', 'WORD') in tokens
-    # assert ('mother-in-law', 'WORD') in tokens
-    # assert ("parents'", 'WORD') in tokens
-    # assert ("Mom", 'WORD') not in tokens
-    # assert ("-Mom", 'WORD') not in tokens
-    # assert ("--Mom", 'WORD') not in tokens
-    #
-    # # comprehensiveness test (5 points)
-    # _, t = zip(*tok(pages[9][2]))
-    # # assert 5 == len(set(t))
 
     """# 3. Collect and merge page views
   
@@ -318,19 +243,18 @@ class Parser:
     'upgrade the ranker module - NEED TO REMOVE TO RANKER.py'
 
     def most_viewed(self, pages, wid2pv):
-        """Rank pages from most viewed to least viewed using the above `wid2pv`
-       counter.
-    Parameters:
-    -----------
-      pages: An iterable list of pages as returned from `page_iter` where each
-             item is an article with (id, title, body)
-    Returns:
-    --------
-    A list of tuples
-      Sorted list of articles from most viewed to least viewed article with
-      article title and page views. For example:
-      [('Langnes, Troms': 16), ('Langenes': 10), ('Langenes, Finnmark': 4), ...]
-    """
+        """Rank pages from most viewed to least viewed using the above `wid2pv` counter.
+        Parameters:
+        -----------
+          pages: An iterable list of pages as returned from `page_iter` where each
+                 item is an article with (id, title, body)
+        Returns:
+        --------
+        A list of tuples
+          Sorted list of articles from most viewed to least viewed article with
+          article title and page views. For example:
+          [('Langnes, Troms': 16), ('Langenes': 10), ('Langenes, Finnmark': 4), ...]
+        """
         # YOUR CODE HERE
         view_list = []
         for page in pages:
@@ -340,9 +264,6 @@ class Parser:
                 view_list.append((page[1], 0))
         view_list.sort(key=lambda x: x[1], reverse=True)
         return view_list
-
-    def filter_tokens(self):
-      pass
 
     # Getting tokens from the text while removing punctuations.
     def filter_tokens(self, tokens, tokens2remove=None, use_stemming=False):
@@ -365,7 +286,7 @@ class Parser:
         # not change the token
         if (not tokens2remove) and (not use_stemming):
             return tokens
-        for x in tokens:
+        for x, tag in tokens:
             # we dont take the word
             if x in tokens2remove:
                 continue
