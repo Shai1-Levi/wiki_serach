@@ -299,3 +299,10 @@ class Parser:
         tokens = tmp_tokens
 
         return tokens
+
+    def get_doc_length(self, text, wiki_id):
+        docs_length = {}
+        RE_WORD = re.compile(r"""[\#\@\w](['\-]?\w){2,24}""", re.UNICODE)
+        tokens = [token.group() for token in RE_WORD.finditer(text.lower())]
+        docs_length[wiki_id] = len(tokens)
+

@@ -68,11 +68,12 @@ def search_body():
       return jsonify(res)
     # BEGIN SOLUTION
     parser = Parser("")
-    tokens = parser.tokenize(query)
+    tokens = parser.tokenize(query.lower())
     filtered_tokens = parser.filter_tokens(tokens=tokens, tokens2remove=parser.en_stopwords)
-    IDX = Indexer()
-    for filtered_token in filtered_tokens:
-        res.append(IDX.read_posting_list(filtered_token))
+    IDX = Indexer("/content/gDrive/MyDrive/project/postings_gcp")
+    res = IDX.get_cosine_sim(filtered_tokens, 100)
+    # for filtered_token in filtered_tokens:
+    #     res.append(IDX.read_posting_list(filtered_token))
     # END SOLUTION
     return jsonify(res)
 
@@ -97,6 +98,34 @@ def search_title():
     query = request.args.get('query', '')
     if len(query) == 0:
       return jsonify(res)
+    # BEGIN SOLUTION
+
+    # END SOLUTION
+    return jsonify(res)
+
+
+@app.route("/search_anchor")
+def search_anchor():
+    ''' Returns ALL (not just top 100) search results that contain A QUERY WORD
+        IN THE ANCHOR TEXT of articles, ordered in descending order of the
+        NUMBER OF QUERY WORDS that appear in anchor text linking to the page.
+        For example, a document with a anchor text that matches two of the
+        query words will be ranked before a document with anchor text that
+        matches only one query term.
+
+        Test this by navigating to the a URL like:
+         http://YOUR_SERVER_DOMAIN/search_anchor?query=hello+world
+        where YOUR_SERVER_DOMAIN is something like XXXX-XX-XX-XX-XX.ngrok.io
+        if you're using ngrok on Colab or your external IP on GCP.
+    Returns:
+    --------
+        list of ALL (not just top 100) search results, ordered from best to
+        worst where each element is a tuple (wiki_id, title).
+    '''
+    res = []
+    query = request.args.get('query', '')
+    if len(query) == 0:
+        return jsonify(res)
     # BEGIN SOLUTION
 
     # END SOLUTION

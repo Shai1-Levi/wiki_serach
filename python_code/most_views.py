@@ -33,6 +33,6 @@ class MostViews:
             with open("wid2pv/{}.pkl".format(page_to_read), 'rb') as f:
                 self.wid2pv = pickle.loads(f.read())
             for page_id in mapped_page_id_to_files[page_to_read]:
-                pages_ids[pages_ids.index(page_id)] = self.wid2pv[page_id]
+                pages_ids[pages_ids.index(page_id)] = self.wid2pv[page_id][0]
 
         return pages_ids

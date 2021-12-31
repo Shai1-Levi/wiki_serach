@@ -69,7 +69,7 @@ class MultiFileReader:
         b = []
         for f_name, offset in locs:
             if f_name not in self._open_files:
-                x = "/content/postings_gcp/"
+                x = "/content/gDrive/MyDrive/project/postings_gcp/"
                 self._open_files[f_name] = open(x+f_name, 'rb')
             f = self._open_files[f_name]
             f.seek(offset)
@@ -127,6 +127,9 @@ class InvertedIndex:
             side-effects).
         """
         w2cnt = Counter(tokens)
+        common = w2cnt.most_common(1)[0][1]
+        for item, count in w2cnt.items():
+            w2cnt[item] /= common
         self.term_total.update(w2cnt)
         for w, cnt in w2cnt.items():
             self.df[w] = self.df.get(w, 0) + 1
