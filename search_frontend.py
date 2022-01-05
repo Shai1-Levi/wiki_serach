@@ -56,8 +56,6 @@ def search():
     res = searcher_best_effort.search(filtered_tokens)
     # expand = searcher_best_effort.search(filtered_tokens, IDX)
     # filtered_expand = parser.filter_tokens(tokens=" ".join(str(x) for x in expand), tokens2remove=parser.en_stopwords)
-
-    # res = IDX.get_cosine_sim(filtered_expand, 100, with_titles=False)
     # END SOLUTION
     return jsonify(res)
 

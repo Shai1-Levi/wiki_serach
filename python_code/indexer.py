@@ -89,9 +89,9 @@ class Indexer:
             for doc_id in self.read_posting_list_title(term):
                 relevent_docs[doc_id] += 1
                 n+=1
-        sorted_ids, _  = zip(*relevent_docs.most_common(n))
+        sorted_ids, score  = zip(*relevent_docs.most_common(n))
         if with_titles == False:
-          return sorted_ids
+          return list(zip(*relevent_docs.most_common(n)))
         return self.get_page_titles(pd.DataFrame({"id": sorted_ids}))
 
     def get_binary_match_anchor(self, query_tokens, with_titles=True):
@@ -101,9 +101,9 @@ class Indexer:
             for doc_id in self.read_posting_list_anchor(term):
                 relevent_docs[doc_id] += 1
                 n+=1
-        sorted_ids, _  = zip(*relevent_docs.most_common(n))
+        sorted_ids, score  = zip(*relevent_docs.most_common(n))
         if with_titles == False:
-          return sorted_ids
+          return list(zip(*relevent_docs.most_common(n)))
         return self.get_page_titles(pd.DataFrame({"id": sorted_ids}))
 
     def tf_idf(self, term, word_freq, doc_id):
@@ -145,9 +145,9 @@ class Indexer:
             sim_dict[doc_id] = sim_dict[doc_id] * self.nf[doc_id][0] # * query_norm
             # except:
             #     pass
-        sorted_ids, _ = zip(*sim_dict.most_common(N))
+        sorted_ids, score = zip(*sim_dict.most_common(N))
         if with_titles == False:
-          return sorted_ids
+          return list(zip(*sim_dict.most_common(N)))
         return self.get_page_titles(pd.DataFrame({"id": sorted_ids}))
 
     def get_page_titles(self, pages_ids):

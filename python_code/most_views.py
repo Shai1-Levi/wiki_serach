@@ -3,32 +3,44 @@ import pickle
 
 
 class MostViews:
-    def __init__(self, path="gDrive/MyDrive/project/page_views"):
+    def __init__(self, path="/content/gDrive/MyDrive/project/page_views_old"):
         self.wid2pv = Counter()
         self.page_views_path = path
 
+        # with open(path+"/index.pkl", 'rb') as f:
+        #   self.mv_index = pickle.loads(f.read())
+
     def most_viewed(self, pages_ids):
-        """Rank pages viewed
-      Parameters:
-      -----------
-        pages: An iterable list of pages ids
-      Returns:
-      --------
-      list of ints:
-          list of page view numbers from August 2021 that correrspond to the
-          provided list article IDs.
-      """
+        # """Rank pages viewed
+        # Parameters:
+        # -----------
+        #   pages: An iterable list of pages ids
+        # Returns:
+        # --------
+        # list of ints:
+        #     list of page view numbers from August 2021 that correrspond to the
+        #     provided list article IDs.
+        # """
+
         pages_to_read = set()
         mapped_page_id_to_files = {}
         for page_id in pages_ids:
             for i in range(200000, 68800000, 200000):
-                if i > page_id:
+                if i >= page_id:
                     pages_to_read.add(i)
                     if i in mapped_page_id_to_files.keys():
                         mapped_page_id_to_files[i].append(page_id)
                     else:
                         mapped_page_id_to_files[i] = [page_id]
                     break
+
+        # for page_id in pages_ids:
+        #     file_mv = self.mv_index[page_id]
+        #     pages_to_read.add(file_mv)
+        #     if file_mv in mapped_page_id_to_files.keys():
+        #         mapped_page_id_to_files[file_mv].append(page_id)
+        #     else:
+        #         mapped_page_id_to_files[file_mv] = [page_id]
 
         for page_to_read in pages_to_read:
             with open("{}/{}.pkl".format(self.page_views_path, page_to_read), 'rb') as f:
