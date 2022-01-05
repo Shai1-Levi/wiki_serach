@@ -3,8 +3,9 @@ import pickle
 
 
 class MostViews:
-    def __init__(self):
+    def __init__(self, path="gDrive/MyDrive/project/page_views"):
         self.wid2pv = Counter()
+        self.page_views_path = path
 
     def most_viewed(self, pages_ids):
         """Rank pages viewed
@@ -30,9 +31,9 @@ class MostViews:
                     break
 
         for page_to_read in pages_to_read:
-            with open("wid2pv/{}.pkl".format(page_to_read), 'rb') as f:
+            with open("{}/{}.pkl".format(self.page_views_path, page_to_read), 'rb') as f:
                 self.wid2pv = pickle.loads(f.read())
             for page_id in mapped_page_id_to_files[page_to_read]:
-                pages_ids[pages_ids.index(page_id)] = self.wid2pv[page_id][0]
+                pages_ids[pages_ids.index(page_id)] = self.wid2pv[page_id]
 
         return pages_ids
