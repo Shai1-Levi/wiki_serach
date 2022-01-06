@@ -13,21 +13,31 @@ class Searcher:
     def search(self, query):
         initial_lst_tup_body_cossine = self.IDX.get_cosine_sim(query, 500, with_titles=False)
         initial_lst_tup_body_title = self.IDXT.get_binary_match_title(query, with_titles=False)
+        doc_ids_body = [x[0] for x in initial_lst_tup_body_cossine]
+        doc_ids_title = [x[0] for x in initial_lst_tup_body_title]
+
+        msi = self.merge_score_indexes(initial_lst_tup_body_cossine, initial_lst_tup_body_title)
+        a = 0.7
+        b = 1-a
+        # combine between indexes score to page view score - take too much time about 8 seconds per query !!!!!!!!!!
+        ids, scores = zip(*msi)
+        page_rank_score = self.pr.get_page_rank_by_ids(ids)
+        doc_id_with_page_view = list(zip(ids, page_rank_score))
+        combine_pageview_indexes = [(x[0], a*x[1]+b*y[1]) for x,y in zip(msi, doc_id_with_page_view)]
+        print(f"msi: {msi}")
+        print(f"doc_id_with_page_view: {doc_id_with_page_view}")
+        print(f"combine_pageview_indexes: {combine_pageview_indexes}")
+        # print("merge_score", msi)
 
 
-        print("initial_lst_tup_body_cossine", initial_lst_tup_body_cossine)
-        print("initial_lst_tup_body_title", initial_lst_tup_body_title)
 
-        ms = self.merge_score(initial_lst_tup_body_cossine, initial_lst_tup_body_title)
-        print("merge_score", ms)
-        print()
         # query = self.expand_query(query)
         # initial_files = list(self.IDX.get_cosine_sim(query, 500, with_titles=False))
         # initial_files_that_popular = self.mv.most_viewed(initial_files)
         # initial_files_that_popular_sorted = sorted(initial_files_that_popular, key=lambda x: x)
         # initial_files_that_popular_pr_sorted = sorted(self.pr.get_page_rank_by_ids(initial_files_that_popular_sorted),
         #                                               key=lambda x: x)
-        return ms
+        return msi
 
     def expand_query(self, query):
         neq_query = []
@@ -41,7 +51,7 @@ class Searcher:
                 neq_query.append(term)
         return self.parser.filter_tokens(tokens=neq_query, tokens2remove=self.parser.stop)
 
-    def merge_score(self, lst_tup_body, lst_tup_title):
+    def merge_score_indexes(self, lst_tup_body, lst_tup_title):
         zip_lst_body = list(zip(*lst_tup_body))
         zip_lst_title = list(zip(*lst_tup_title))
         lst_body = [t[0] for t in zip_lst_body]
