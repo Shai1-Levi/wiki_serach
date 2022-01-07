@@ -62,47 +62,50 @@ class Searcher:
           '''
         lst = []
         for page_id in pages_ids:
-            lst.append((page_id, self.titles[page_id]))
+            try:
+                lst.append((page_id, self.titles[page_id]))
+            except:
+                pass
         return lst
 
-        files_name = [158361, 434000, 767804, 1165403, 1602318, 2063004, 2548159, 3089250, 3679721, 4351962, 5081862,
-                      5812519, 6598640, 7443732, 8400567, 9413712, 10537076, 11617344, 12468957, 13245200, 14310616,
-                      15321353, 16195550, 17430257, 18508742, 19291087, 20390809, 21386331, 22268217, 23242167,
-                      24074227,
-                      25080812, 26068663, 27111995, 28159117, 29259581, 30499123, 31549598, 32643995, 33656354,
-                      34761591,
-                      35918133, 36815038, 37900157, 38960238, 39974621, 40950632, 41924177, 42980673, 43938195,
-                      45007416,
-                      46575031, 47584475, 48850115, 50136023, 51293440, 52515585, 53647429, 54827383, 56143023,
-                      57230195,
-                      58301426, 59688406, 60952233, 62088946, 63344543, 64478166, 65916205, 67184267, 68380237]
-        pages_to_read = set()
-        mapped_page_id_to_files = {}
-        pages_ids['title'] = np.nan
-        for index, page_id in pages_ids.iterrows():
-            for i in files_name:
-                if i > page_id['id']:
-                    pages_to_read.add(i)
-                    if i in mapped_page_id_to_files.keys():
-                        mapped_page_id_to_files[i].append(page_id['id'])
-                    else:
-                        mapped_page_id_to_files[i] = [page_id['id']]
-                    break
-
-        for page_to_read in pages_to_read:
-            tmp_df = pd.DataFrame({"id": mapped_page_id_to_files[page_to_read]})
-            self.titles = pd.read_pickle("/content/gDrive/MyDrive/project/titles/{}.pkl".format(page_to_read))
-            # with open("/content/gDrive/MyDrive/project/titles/{}.pkl".format(page_to_read), 'rb') as f:
-            #     self.titles = pickle.loads(f.read())
-            try:
-                relevent_titles = pd.merge(self.titles, tmp_df, on="id")
-
-                pages_ids['title'].update(pages_ids['id'].map(relevent_titles.set_index('id')['title']))
-
-            except Exception as e:
-                print(e)
-
-        return pages_ids.to_dict(orient='split')["data"]
+        # files_name = [158361, 434000, 767804, 1165403, 1602318, 2063004, 2548159, 3089250, 3679721, 4351962, 5081862,
+        #               5812519, 6598640, 7443732, 8400567, 9413712, 10537076, 11617344, 12468957, 13245200, 14310616,
+        #               15321353, 16195550, 17430257, 18508742, 19291087, 20390809, 21386331, 22268217, 23242167,
+        #               24074227,
+        #               25080812, 26068663, 27111995, 28159117, 29259581, 30499123, 31549598, 32643995, 33656354,
+        #               34761591,
+        #               35918133, 36815038, 37900157, 38960238, 39974621, 40950632, 41924177, 42980673, 43938195,
+        #               45007416,
+        #               46575031, 47584475, 48850115, 50136023, 51293440, 52515585, 53647429, 54827383, 56143023,
+        #               57230195,
+        #               58301426, 59688406, 60952233, 62088946, 63344543, 64478166, 65916205, 67184267, 68380237]
+        # pages_to_read = set()
+        # mapped_page_id_to_files = {}
+        # pages_ids['title'] = np.nan
+        # for index, page_id in pages_ids.iterrows():
+        #     for i in files_name:
+        #         if i > page_id['id']:
+        #             pages_to_read.add(i)
+        #             if i in mapped_page_id_to_files.keys():
+        #                 mapped_page_id_to_files[i].append(page_id['id'])
+        #             else:
+        #                 mapped_page_id_to_files[i] = [page_id['id']]
+        #             break
+        #
+        # for page_to_read in pages_to_read:
+        #     tmp_df = pd.DataFrame({"id": mapped_page_id_to_files[page_to_read]})
+        #     self.titles = pd.read_pickle("/content/gDrive/MyDrive/project/titles/{}.pkl".format(page_to_read))
+        #     # with open("/content/gDrive/MyDrive/project/titles/{}.pkl".format(page_to_read), 'rb') as f:
+        #     #     self.titles = pickle.loads(f.read())
+        #     try:
+        #         relevent_titles = pd.merge(self.titles, tmp_df, on="id")
+        #
+        #         pages_ids['title'].update(pages_ids['id'].map(relevent_titles.set_index('id')['title']))
+        #
+        #     except Exception as e:
+        #         print(e)
+        #
+        # return pages_ids.to_dict(orient='split')["data"]
 
     def merge_score_pr_or_mv(self, pr_or_mv, lst_tup, a, b):
         counter = Counter()
