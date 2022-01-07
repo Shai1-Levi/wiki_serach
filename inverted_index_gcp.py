@@ -67,7 +67,6 @@ class MultiFileReader:
 
     def read(self, locs, n_bytes):
         b = []
-        print("read", locs)
         for f_name, offset in locs:
             if f_name not in self._open_files:
                 x = "/content/gDrive/MyDrive/project/postings_gcp/"

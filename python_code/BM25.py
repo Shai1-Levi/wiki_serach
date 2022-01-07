@@ -5,6 +5,8 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 import pickle
+from contextlib import closing
+from collections import Counter, defaultdict
 
 TUPLE_SIZE = 6  # We're going to pack the doc_id and tf values in this
 # many bytes.
@@ -13,10 +15,9 @@ TF_MASK = 2 ** 16 - 1  # Masking the 16 low bits of an integer
 # DL = {}  # We're going to update and calculate this after each document. This will be usefull for the calculation of AVGDL (utilized in BM25)
 nf = pd.read_pickle("/content/gDrive/MyDrive/project/doc_body_length.pkl")
 DL = {}
-print(len(nf))
 
 # Let's start with a small block size of 30 bytes just to test things out.
-BLOCK_SIZE = 199998
+BLOCK_SIZE = 1999998
 
 
 class MultiFileWriter:
@@ -58,10 +59,13 @@ class MultiFileReader:
         b = []
         for f_name, offset in locs:
             if f_name not in self._open_files:
-                self._open_files[f_name] = open(f_name, 'rb')
+                x = "/content/gDrive/MyDrive/project/postings_gcp/"
+                self._open_files[f_name] = open(x + f_name, 'rb')
             f = self._open_files[f_name]
             f.seek(offset)
             n_read = min(n_bytes, BLOCK_SIZE - offset)
+            if n_read < -1:
+                n_read = -1
             b.append(f.read(n_read))
             n_bytes -= n_read
         return b''.join(b)
@@ -106,7 +110,7 @@ class InvertedIndex:
             the tf of tokens, then update the index (in memory, no storage
             side-effects).
         """
-        DL[(doc_id)] = DL.get(doc_id, 0) + (nf[doc_id][1])
+        # DL[(doc_id)] = DL.get(doc_id, 0) + (nf[doc_id][1])
         w2cnt = Counter(tokens)
         self.term_total.update(w2cnt)
         max_value = max(w2cnt.items(), key=operator.itemgetter(1))[1]
@@ -204,9 +208,9 @@ class BM25_from_index:
         self.k1 = k1
         self.index = index
         self.N = len(nf)
-        self.AVGDL = sum(DL.values()) / self.N
+        self.AVGDL = sum(d_n for d_norm, d_n in nf.values()) / self.N
         # self.AVGDL = sum(DL.values()) / self.N
-        self.words, self.pls = zip(*self.index.posting_lists_iter(who_am_i='BM25'))
+        # self.words, self.pls = zip(*self.index.posting_lists_iter(who_am_i='BM25'))
 
     def calc_idf(self, list_of_tokens):
         """
@@ -249,19 +253,28 @@ class BM25_from_index:
         score: float, bm25 score.
         """
         # YOUR CODE HERE
-        scores = {}
-        self.idf = self.calc_idf(list(set(chain.from_iterable(queries.values()))))
+        scores = Counter()
+        # queries= queries.split(" ")
+        self.idf = self.calc_idf(list(set(queries)))
+        # print("self.idf", self.idf)
         # key = query_id, val = list of tuple(candidate_doc_id, bm25value)
-        # for
-        for query_index, query in queries.items():
-            candidate_documents = self.get_candidate_documents(query, self.index, self.words, self.pls)
+        candidate_documents_and_tf = self.get_candidate_documents(queries, self.index)  # , self.words, self.pls)
+        for query_index, query in enumerate(queries):
+            # candidate_documents_and_tf = self.get_candidate_documents(query, self.index)#, self.words, self.pls)
+            # print("candidate_documents", candidate_documents)
             # self.idf = self.calc_idf(query)
             # scores[query_index] = get_top_n(dict([(doc_id, self._score(query, doc_id)) for doc_id in candidate_documents]),N)
-            scores_lst = [(doc_id, self._score(query, doc_id)) for doc_id in candidate_documents]
-            scores[query_index] = sorted(scores_lst, key=lambda x: x[1], reverse=True)[:N]
-        return scores
+            scores_lst = [(doc_id, self._score([query], doc_id, tf)) for doc_id, tf in
+                          candidate_documents_and_tf[query]]
+            # print("scores_lst", scores_lst)
+            for k, bm_v in scores_lst:
+                scores[k] += bm_v
+            # scores[query_index] = sorted(scores_lst, key=lambda x: x[1], reverse=True)[:N]
+        return scores.most_common(100)
 
-    def _score(self, query, doc_id):
+    # key term : val [(doc_id, bm25score)]
+
+    def _score(self, query, doc_id, freq):
         """
         This function calculate the bm25 score for given query and document.
 
@@ -275,19 +288,40 @@ class BM25_from_index:
         score: float, bm25 score.
         """
         score = 0.0
-        doc_len = DL[str(doc_id)]
-
+        if doc_id in nf.keys():
+            doc_len = nf[doc_id][1]
+        else:
+            doc_len = 0
+            # print("doc_len", doc_len)
+        # print("query", query)
+        # print("self.index.df.keys()", self.index.df.keys())
         for term in query:
-            if term in self.index.term_total.keys():
-                term_frequencies = dict(self.pls[self.words.index(term)])
-                if doc_id in term_frequencies.keys():
-                    freq = term_frequencies[doc_id]
-                    numerator = self.idf[term] * freq * (self.k1 + 1)
-                    denominator = freq + self.k1 * (1 - self.b + self.b * doc_len / self.AVGDL)
-                    score += (numerator / denominator)
+            if term in self.index.df.keys():
+                # print("HERE")
+                # term_frequencies = dict(self.pls[self.words.index(term)])
+                # term_frequencies = dict(self.read_posting_list_body(term))
+                # print("term_frequencies", term_frequencies)
+                # if doc_id in term_frequencies.keys():
+                # freq = term_frequencies[doc_id]
+                # print("freq", freq)
+                # print("self.idf[term]", self.idf[term])
+                numerator = self.idf[term] * freq * (self.k1 + 1)
+                denominator = freq + self.k1 * (1 - self.b + self.b * doc_len / self.AVGDL)
+                score += (numerator / denominator)
         return score
 
-    def get_candidate_documents(self, query_to_search, index, words, pls):
+    def read_posting_list_body(self, w):
+        with closing(MultiFileReader()) as reader:
+            locs = self.index.posting_locs[w]
+            b = reader.read(locs, self.index.df[w] * TUPLE_SIZE)
+            posting_list = []
+            for i in range(self.index.df[w]):
+                doc_id = int.from_bytes(b[i * TUPLE_SIZE:i * TUPLE_SIZE + 4], 'big')
+                tf = int.from_bytes(b[i * TUPLE_SIZE + 4:(i + 1) * TUPLE_SIZE], 'big')
+                posting_list.append((doc_id, tf))
+            return posting_list
+
+    def get_candidate_documents(self, query_to_search, index):  # , words, pls):
         """
         Generate a dictionary representing a pool of candidate documents for a given query.
 
@@ -307,9 +341,13 @@ class BM25_from_index:
                                                     key: pair (doc_id,term)
                                                     value: tfidf score.
         """
-        candidates = []
+        candidates = {}
         for term in np.unique(query_to_search):
-            if term in words:
-                current_list = (pls[words.index(term)])
-                candidates += current_list
-        return np.unique(candidates)
+            candidates[term] = self.read_posting_list_body(term)
+            # candidates.update(dict(self.read_posting_list_body(term)))
+            # if term in words:
+            #     current_list = (pls[words.index(term)])
+            #     candidates += current_list
+        return candidates
+
+        # return np.unique(candidates)

@@ -5,6 +5,7 @@ from python_code.Parser import Parser
 from python_code.most_views import MostViews
 from python_code.Ranker import Ranker
 from python_code.Searcher import Searcher
+from python_code.BM25 import BM25_from_index
 
 
 class MyFlaskApp(Flask):
@@ -24,10 +25,16 @@ IDXA = Indexer("/content/gDrive/MyDrive/project/postings_gcp_anchor", "anchor")
 pr_path = "gDrive/MyDrive/project/pr_part-00000-cee121d4-59d6-4bfd-842d-535dd4402d5e-c000.csv.gz"
 ranker = Ranker(pr_path)
 
+bm25_body = BM25_from_index(IDX.inv_idx)
+bm25_title = BM25_from_index(IDXT.inv_idx)
+bm25_anchor = BM25_from_index(IDXA.inv_idx)
+
+bm25 = [bm25_body, bm25_title, bm25_anchor]
+
 most_views = MostViews()
 
-searcher_best_effort = Searcher(IDX, IDXT, IDXA, ranker, most_views, parser)
-
+# searcher_best_effort = Searcher(IDX, IDXT, IDXA, ranker, most_views, parser, bm25)
+searcher_best_effort = Searcher()
 
 @app.route("/search")
 def search():
@@ -53,7 +60,7 @@ def search():
         return jsonify(res)
     # BEGIN SOLUTION
     filtered_tokens = parser.filter_tokens(tokens=query, tokens2remove=parser.stop)
-    res = searcher_best_effort.search(filtered_tokens)
+    res = searcher_best_effort.search(filtered_tokens,IDX, IDXT, IDXA, ranker, most_views, parser,  bm25)
     # expand = searcher_best_effort.search(filtered_tokens, IDX)
     # filtered_expand = parser.filter_tokens(tokens=" ".join(str(x) for x in expand), tokens2remove=parser.en_stopwords)
     # END SOLUTION
