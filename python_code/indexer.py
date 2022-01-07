@@ -46,6 +46,7 @@ class Indexer:
         self.TF_MASK = 2 ** 16 - 1  # Masking the 16 low bits of an integer
         # self.sc = sc
         # self.spark = spark
+        self.titles = pd.read_pickle("/content/gDrive/MyDrive/project/titles.pkl")
 
     def read_posting_list_title(self, w):
         with closing(MRC()) as reader:
@@ -92,7 +93,8 @@ class Indexer:
         if with_titles == False:
           return relevent_docs.most_common(n)
         sorted_ids, score  = zip(*relevent_docs.most_common(n))
-        return self.get_page_titles(pd.DataFrame({"id": sorted_ids}))
+        # print("title", sorted_ids)
+        return self.get_page_titles(sorted_ids)
 
     def get_binary_match_anchor(self, query_tokens, with_titles=True):
         relevent_docs = Counter()
@@ -105,7 +107,8 @@ class Indexer:
         if with_titles == False:
           return relevent_docs.most_common(n)
         sorted_ids, score  = zip(*relevent_docs.most_common(n))
-        return self.get_page_titles(pd.DataFrame({"id": sorted_ids}))
+        # print("anchor", sorted_ids)
+        return self.get_page_titles(sorted_ids)
 
     def tf_idf(self, term, word_freq, doc_id):
         idf = np.log2(self.N / self.inv_idx.df[term])
@@ -149,7 +152,7 @@ class Indexer:
         if with_titles == False:
           return sim_dict.most_common(N)
         sorted_ids, score = zip(*sim_dict.most_common(N))
-        return self.get_page_titles(pd.DataFrame({"id": sorted_ids}))
+        return  self.get_page_titles(sorted_ids) #self.get_page_titles(pd.DataFrame({"id": sorted_ids}))
 
     def get_page_titles(self, pages_ids):
         ''' Returns the title of the first, fourth, and fifth pages as ranked about
@@ -158,6 +161,11 @@ class Indexer:
             --------
               list of three strings.
           '''
+        lst = []
+        for page_id in pages_ids:
+            lst.append((page_id, self.titles[page_id]))
+        return lst
+
         files_name = [158361, 434000, 767804, 1165403, 1602318, 2063004, 2548159, 3089250, 3679721, 4351962, 5081862,
                       5812519, 6598640, 7443732, 8400567, 9413712, 10537076, 11617344, 12468957, 13245200, 14310616,
                       15321353, 16195550, 17430257, 18508742, 19291087, 20390809, 21386331, 22268217, 23242167, 24074227,

@@ -270,7 +270,7 @@ class BM25_from_index:
             for k, bm_v in scores_lst:
                 scores[k] += bm_v
             # scores[query_index] = sorted(scores_lst, key=lambda x: x[1], reverse=True)[:N]
-        return scores.most_common(100)
+        return scores.most_common(N)
 
     # key term : val [(doc_id, bm25score)]
 

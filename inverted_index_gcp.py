@@ -162,7 +162,7 @@ class InvertedIndex:
             for w, locs in self.posting_locs.items():
                 if who_am_i=='BM25':
                   locs = [locs]
-                print(locs)
+                # print(locs)
                 b = reader.read(locs[0], self.df[w] * TUPLE_SIZE)
                 posting_list = []
                 for i in range(self.df[w]):
