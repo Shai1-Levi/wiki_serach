@@ -67,6 +67,7 @@ class MultiFileReader:
 
     def read(self, locs, n_bytes):
         b = []
+        print("read", locs)
         for f_name, offset in locs:
             if f_name not in self._open_files:
                 x = "/content/gDrive/MyDrive/project/postings_gcp/"
@@ -154,12 +155,15 @@ class InvertedIndex:
         del state['_posting_list']
         return state
 
-    def posting_lists_iter(self):
+    def posting_lists_iter(self, who_am_i='body'):
         """ A generator that reads one posting list from disk and yields
             a (word:str, [(doc_id:int, tf:int), ...]) tuple.
         """
         with closing(MultiFileReader()) as reader:
             for w, locs in self.posting_locs.items():
+                if who_am_i=='BM25':
+                  locs = [locs]
+                print(locs)
                 b = reader.read(locs[0], self.df[w] * TUPLE_SIZE)
                 posting_list = []
                 for i in range(self.df[w]):
