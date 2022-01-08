@@ -11,6 +11,7 @@ import numpy as np
 import pickle
 from pprint import pprint
 from pathlib import Path
+from python_code.utils import Utils
 # import pyspark
 # from pyspark.sql import *
 # from pyspark.sql.functions import *
@@ -46,7 +47,8 @@ class Indexer:
         self.TF_MASK = 2 ** 16 - 1  # Masking the 16 low bits of an integer
         # self.sc = sc
         # self.spark = spark
-        self.titles = pd.read_pickle("/content/gDrive/MyDrive/project/titles.pkl")
+        # self.titles = pd.read_pickle("/content/gDrive/MyDrive/project/titles.pkl")
+        self.titles = ""
 
     def read_posting_list_title(self, w):
         with closing(MRC()) as reader:
@@ -94,7 +96,8 @@ class Indexer:
           return relevent_docs.most_common(n)
         sorted_ids, score  = zip(*relevent_docs.most_common(n))
         # print("title", sorted_ids)
-        return self.get_page_titles(sorted_ids)
+        # return self.get_page_titles(sorted_ids)
+        return Util.get_page_titles(sorted_ids)
 
     def get_binary_match_anchor(self, query_tokens, with_titles=True):
         relevent_docs = Counter()
@@ -108,7 +111,8 @@ class Indexer:
           return relevent_docs.most_common(n)
         sorted_ids, score  = zip(*relevent_docs.most_common(n))
         # print("anchor", sorted_ids)
-        return self.get_page_titles(sorted_ids)
+        # return self.get_page_titles(sorted_ids)
+        return Util.get_page_titles(sorted_ids)
 
     def tf_idf(self, term, word_freq, doc_id):
         idf = np.log2(self.N / self.inv_idx.df[term])
@@ -152,7 +156,8 @@ class Indexer:
         if with_titles == False:
           return sim_dict.most_common(N)
         sorted_ids, score = zip(*sim_dict.most_common(N))
-        return  self.get_page_titles(sorted_ids) #self.get_page_titles(pd.DataFrame({"id": sorted_ids}))
+        # return  self.get_page_titles(sorted_ids)
+        return Util.get_page_titles(sorted_ids)
 
     def get_page_titles(self, pages_ids):
         ''' Returns the title of the first, fourth, and fifth pages as ranked about

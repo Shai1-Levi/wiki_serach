@@ -52,15 +52,16 @@ class MultiFileWriter:
 class MultiFileReader:
     """ Sequential binary reader of multiple files of up to BLOCK_SIZE each. """
 
-    def __init__(self):
+    def __init__(self, path):
         self._open_files = {}
+        self.xpath = path
 
     def read(self, locs, n_bytes):
         b = []
         for f_name, offset in locs:
             if f_name not in self._open_files:
-                x = "/content/gDrive/MyDrive/project/postings_gcp/"
-                self._open_files[f_name] = open(x + f_name, 'rb')
+                # x = "/content/gDrive/MyDrive/project/postings_gcp/"
+                self._open_files[f_name] = open(self.xpath + f_name, 'rb')
             f = self._open_files[f_name]
             f.seek(offset)
             n_read = min(n_bytes, BLOCK_SIZE - offset)
@@ -203,12 +204,13 @@ class BM25_from_index:
     index: inverted index
     """
 
-    def __init__(self, index, k1=1.5, b=0.75):
+    def __init__(self, index,path, k1=1.5, b=0.75):
         self.b = b
         self.k1 = k1
         self.index = index
         self.N = len(nf)
         self.AVGDL = sum(d_n for d_norm, d_n in nf.values()) / self.N
+        self.path = path
         # self.AVGDL = sum(DL.values()) / self.N
         # self.words, self.pls = zip(*self.index.posting_lists_iter(who_am_i='BM25'))
 
@@ -310,8 +312,8 @@ class BM25_from_index:
                 score += (numerator / denominator)
         return score
 
-    def read_posting_list_body(self, w):
-        with closing(MultiFileReader()) as reader:
+    def read_posting_list(self, w):
+        with closing(MultiFileReader(self.path)) as reader:
             locs = self.index.posting_locs[w]
             b = reader.read(locs, self.index.df[w] * TUPLE_SIZE)
             posting_list = []
@@ -343,7 +345,7 @@ class BM25_from_index:
         """
         candidates = {}
         for term in np.unique(query_to_search):
-            candidates[term] = self.read_posting_list_body(term)
+            candidates[term] = self.read_posting_list(term)
             # candidates.update(dict(self.read_posting_list_body(term)))
             # if term in words:
             #     current_list = (pls[words.index(term)])

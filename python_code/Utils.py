@@ -1,5 +1,27 @@
 # # Import Module
 import os
+import pandas as pd
+
+
+class Util:
+    def __init__(self):
+        self.titles = pd.read_pickle("/content/gDrive/MyDrive/project/titles.pkl")
+
+    def get_page_titles(self, pages_ids):
+        ''' Returns the title of the first, fourth, and fifth pages as ranked about
+          by PageRank.
+            Returns:
+            --------
+              list of three strings.
+          '''
+        lst = []
+        for page_id in pages_ids:
+            try:
+                lst.append((page_id, self.titles[page_id]))
+            except:
+                pass
+        return lst
+
 
 # Folder Path
 path = "/content/wikidumps/wikidumps"

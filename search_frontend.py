@@ -25,9 +25,9 @@ IDXA = Indexer("/content/gDrive/MyDrive/project/postings_gcp_anchor", "anchor")
 pr_path = "gDrive/MyDrive/project/pr_part-00000-cee121d4-59d6-4bfd-842d-535dd4402d5e-c000.csv.gz"
 ranker = Ranker(pr_path)
 
-bm25_body = BM25_from_index(IDX.inv_idx)
-bm25_title = BM25_from_index(IDXT.inv_idx)
-bm25_anchor = BM25_from_index(IDXA.inv_idx)
+bm25_body = BM25_from_index(IDX.inv_idx,"/content/gDrive/MyDrive/project/postings_gcp/", k=5, b=0.75)
+bm25_title = BM25_from_index(IDXT.inv_idx,"/content/gDrive/MyDrive/project/postings_gcp_title2/")
+bm25_anchor = BM25_from_index(IDXA.inv_idx,"/content/gDrive/MyDrive/project/postings_gcp_anchor/")
 
 bm25 = [bm25_body, bm25_title, bm25_anchor]
 
