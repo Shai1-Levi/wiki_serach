@@ -61,7 +61,6 @@ class MultiFileReader:
         b = []
         for f_name, offset in locs:
             if f_name not in self._open_files:
-                # x = "/content/gDrive/MyDrive/project/postings_gcp/"
                 self._open_files[f_name] = open(self.xpath + f_name, 'rb')
             f = self._open_files[f_name]
             f.seek(offset)
@@ -112,7 +111,7 @@ class InvertedIndex:
             the tf of tokens, then update the index (in memory, no storage
             side-effects).
         """
-        # DL[(doc_id)] = DL.get(doc_id, 0) + (nf[doc_id][1])
+        # DL[(doc_id)] = DL.get(doc_id, 0) + (self.nf[doc_id][1])
         w2cnt = Counter(tokens)
         self.term_total.update(w2cnt)
         max_value = max(w2cnt.items(), key=operator.itemgetter(1))[1]
@@ -213,8 +212,6 @@ class BM25_from_index:
         self.N = len(self.nf)
         self.AVGDL = sum(d_n for d_norm, d_n in self.nf.values()) / self.N
         self.path = path
-        # self.AVGDL = sum(DL.values()) / self.N
-        # self.words, self.pls = zip(*self.index.posting_lists_iter(who_am_i='BM25'))
 
     def calc_idf(self, list_of_tokens):
         """
@@ -239,7 +236,7 @@ class BM25_from_index:
                 pass
         return idf
 
-    def search(self, queries, N=3):
+    def search(self, queries, N=100):
         """
         This function calculate the bm25 score for given query and document.
         We need to check only documents which are 'candidates' for a given query.
@@ -256,27 +253,19 @@ class BM25_from_index:
         -----------
         score: float, bm25 score.
         """
-        # YOUR CODE HERE
         scores = Counter()
-        # queries= queries.split(" ")
         self.idf = self.calc_idf(list(set(queries)))
-        # print("self.idf", self.idf)
-        # key = query_id, val = list of tuple(candidate_doc_id, bm25value)
+
         candidate_documents_and_tf = self.get_candidate_documents(queries, self.index)  # , self.words, self.pls)
         for query_index, query in enumerate(queries):
-            # candidate_documents_and_tf = self.get_candidate_documents(query, self.index)#, self.words, self.pls)
-            # print("candidate_documents", candidate_documents)
-            # self.idf = self.calc_idf(query)
-            # scores[query_index] = get_top_n(dict([(doc_id, self._score(query, doc_id)) for doc_id in candidate_documents]),N)
+
             scores_lst = [(doc_id, self._score([query], doc_id, tf)) for doc_id, tf in
                           candidate_documents_and_tf[query]]
-            # print("scores_lst", scores_lst)
             for k, bm_v in scores_lst:
                 scores[k] += bm_v
-            # scores[query_index] = sorted(scores_lst, key=lambda x: x[1], reverse=True)[:N]
         return scores.most_common(N)
 
-    # key term : val [(doc_id, bm25score)]
+    # format: key term : val [(doc_id, bm25score)]
 
     def _score(self, query, doc_id, freq):
         """
@@ -296,24 +285,13 @@ class BM25_from_index:
             doc_len = self.nf[doc_id][1]
         else:
             doc_len = 0
-            # print("doc_len", doc_len)
-        # print("query", query)
-        # print("self.index.df.keys()", self.index.df.keys())
         for term in query:
             if term in self.index.df.keys():
-                # print("HERE")
-                # term_frequencies = dict(self.pls[self.words.index(term)])
-                # term_frequencies = dict(self.read_posting_list_body(term))
-                # print("term_frequencies", term_frequencies)
-                # if doc_id in term_frequencies.keys():
-                # freq = term_frequencies[doc_id]
-                # print("freq", freq)
-                # print("self.idf[term]", self.idf[term])
                 numerator = self.idf[term] * freq * (self.k1 + 1)
                 denominator = freq + self.k1 * (1 - self.b + self.b * doc_len / self.AVGDL)
                 score += (numerator / denominator)
         return score
-
+    # read a posting list from disk by given a term
     def read_posting_list(self, w):
         with closing(MultiFileReader(self.path)) as reader:
             locs = self.index.posting_locs[w]
@@ -348,10 +326,5 @@ class BM25_from_index:
         candidates = {}
         for term in np.unique(query_to_search):
             candidates[term] = self.read_posting_list(term)
-            # candidates.update(dict(self.read_posting_list_body(term)))
-            # if term in words:
-            #     current_list = (pls[words.index(term)])
-            #     candidates += current_list
         return candidates
 
-        # return np.unique(candidates)

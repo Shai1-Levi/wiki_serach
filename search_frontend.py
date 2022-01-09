@@ -13,14 +13,17 @@ class MyFlaskApp(Flask):
     def run(self, host=None, port=None, debug=None, **options):
         super(MyFlaskApp, self).run(host=host, port=port, debug=debug, **options)
 
+# initialize global variable
+
+# vm_path = "/content/gDrive/MyDrive/project/"  #drive
+vm_path = "/home/hshah/resources/"   # gcp vm instance
 
 app = MyFlaskApp(__name__)
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
 
 parser = Parser("")
 
-# vm_path = "/content/gDrive/MyDrive/project/"  #drive
-vm_path = "/home/hshah/resources/"   # gcp vm instance
+utils = Utils(vm_path)
 
 IDX = Indexer(vm_path + "postings_gcp/", utils, "body")
 IDXT = Indexer(vm_path + "postings_gcp_title2/", utils, "title")
