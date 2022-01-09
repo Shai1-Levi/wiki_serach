@@ -19,20 +19,18 @@ app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
 
 parser = Parser("")
 
-vm_path = "/content/gDrive/MyDrive/project/"  #drive
-# vm_path = "~/resources/"   # gcp vm instance
+# vm_path = "/content/gDrive/MyDrive/project/"  #drive
+vm_path = "/home/hshah/resources/"   # gcp vm instance
 
-utils = Utils(vm_path)
+IDX = Indexer(vm_path + "postings_gcp/", utils, "body")
+IDXT = Indexer(vm_path + "postings_gcp_title2/", utils, "title")
+IDXA = Indexer(vm_path + "postings_gcp_anchor/", utils, "anchor")
 
-IDX = Indexer(vm_path + "postings_gcp", utils, "body")
-IDXT = Indexer(vm_path + "postings_gcp_title2", utils, "title")
-IDXA = Indexer(vm_path + "postings_gcp_anchor", utils, "anchor")
-
-pr_path = vm_path + "pr_part-00000-cee121d4-59d6-4bfd-842d-535dd4402d5e-c000.csv.gz"
+pr_path = vm_path + "pr/pr_part-00000-cee121d4-59d6-4bfd-842d-535dd4402d5e-c000.csv.gz"
 ranker = Ranker(pr_path)
 
-bm25_body = BM25_from_index(IDX.inv_idx, vm_path + "postings_gcp/", utils, k=5, b=0.75)
-bm25_title = BM25_from_index(IDXT.inv_idx, vm_path +"postings_gcp_title2/", utils,)
+bm25_body = BM25_from_index(IDX.inv_idx, vm_path + "postings_gcp/", utils, k1=5, b=0.75)
+bm25_title = BM25_from_index(IDXT.inv_idx, vm_path +"postings_gcp_title2/", utils)
 bm25_anchor = BM25_from_index(IDXA.inv_idx, vm_path + "postings_gcp_anchor/", utils)
 
 bm25 = [bm25_body, bm25_title, bm25_anchor]
@@ -66,7 +64,7 @@ def search():
         return jsonify(res)
     # BEGIN SOLUTION
     filtered_tokens = parser.filter_tokens(tokens=query, tokens2remove=parser.stop)
-    res = searcher_best_effort.search(filtered_tokens, IDX, IDXT, IDXA, ranker, most_views, parser, bm25)
+    res = searcher_best_effort.search(filtered_tokens,IDX, IDXT, IDXA, ranker, most_views, parser,  bm25)
     # expand = searcher_best_effort.search(filtered_tokens, IDX)
     # filtered_expand = parser.filter_tokens(tokens=" ".join(str(x) for x in expand), tokens2remove=parser.en_stopwords)
     # END SOLUTION
@@ -95,7 +93,7 @@ def search_body():
         return jsonify(res)
     # BEGIN SOLUTION
     filtered_tokens = parser.filter_tokens(tokens=query, tokens2remove=parser.stop)
-    res = IDX.get_cosine_sim(filtered_tokens, 100, with_titles=False)
+    res = IDX.get_cosine_sim(filtered_tokens, 100, with_titles=True)
     # END SOLUTION
     return jsonify(res)
 
@@ -123,7 +121,7 @@ def search_title():
         return jsonify(res)
     # BEGIN SOLUTION
     filtered_tokens = parser.filter_tokens(tokens=query, tokens2remove=parser.stop)
-    res = IDXT.get_binary_match_title(filtered_tokens, with_titles=False)
+    res = IDXT.get_binary_match_title(filtered_tokens, with_titles=True)
     # END SOLUTION
     return jsonify(res)
 
@@ -152,7 +150,7 @@ def search_anchor():
         return jsonify(res)
     # BEGIN SOLUTION
     filtered_tokens = parser.filter_tokens(tokens=query, tokens2remove=parser.stop)
-    res = IDXA.get_binary_match_anchor(filtered_tokens, with_titles=False)
+    res = IDXA.get_binary_match_anchor(filtered_tokens, with_titles=True)
     # END SOLUTION
     return jsonify(res)
 
@@ -198,7 +196,7 @@ def get_pageview():
     Returns:
     --------
         list of ints:
-          list of page view numbers from August 2021 that correrspond to the 
+          list of page view numbers from August 2021 that correrspond to the
           provided list article IDs.
     '''
     res = []

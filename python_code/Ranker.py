@@ -20,9 +20,9 @@ class Ranker:
         lst = []
         for page_id in page_ids:
             try:
-                lst.append((page_id, self.page_rank_df[page_id]))
+                lst.append(self.page_rank_df[page_id])
             except:
-                lst.append((page_id, 0.15))
+                lst.append(0)
                 pass
         return lst
 

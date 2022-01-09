@@ -1,4 +1,3 @@
-
 from inverted_index_colab import InvertedIndex as IIC, MultiFileReader as MRC
 from inverted_index_gcp import InvertedIndex as IIG, MultiFileReader as MRG
 from inverted_index_anchor import InvertedIndex as IIA, MultiFileReader as MRA
@@ -11,7 +10,9 @@ import numpy as np
 import pickle
 from pprint import pprint
 from pathlib import Path
-from python_code.utils import Utils
+from python_code.Utils import Utils
+
+
 # import pyspark
 # from pyspark.sql import *
 # from pyspark.sql.functions import *
@@ -35,14 +36,15 @@ class Indexer:
     def __init__(self, index_path, utils, indexr_name="body"):
         self.inv_idx_path = index_path
         self.inv_idx_file = "index"
+        self.utils = utils
         if indexr_name == "body":
             self.inv_idx = IIG.read_index(self.inv_idx_path, self.inv_idx_file)
-            self.nf = pd.read_pickle(index_path + "doc_body_length.pkl")
+            self.nf = self.utils.get_nf()  # pd.read_pickle(index_path + "doc_body_length.pkl")
         elif indexr_name == "title":
             self.inv_idx = IIC.read_index(self.inv_idx_path, self.inv_idx_file)
         elif indexr_name == "anchor":
             self.inv_idx = IIA.read_index(self.inv_idx_path, self.inv_idx_file)
-        self.utils = utils
+
         self.N = 6348910
         self.TUPLE_SIZE = 6
         self.TF_MASK = 2 ** 16 - 1  # Masking the 16 low bits of an integer
@@ -92,10 +94,10 @@ class Indexer:
         for term in set(query_tokens):
             for doc_id in self.read_posting_list_title(term):
                 relevent_docs[doc_id] += 1
-                n+=1
+                n += 1
         if with_titles == False:
-          return relevent_docs.most_common(n)
-        sorted_ids, score  = zip(*relevent_docs.most_common(n))
+            return relevent_docs.most_common(n)
+        sorted_ids, score = zip(*relevent_docs.most_common(n))
         # print("title", sorted_ids)
         # return self.get_page_titles(sorted_ids)
         return self.utils.get_page_titles(sorted_ids)
@@ -106,11 +108,11 @@ class Indexer:
         for term in set(query_tokens):
             for doc_id in self.read_posting_list_anchor(term):
                 relevent_docs[doc_id] += 1
-                n+=1
+                n += 1
 
         if with_titles == False:
-          return relevent_docs.most_common(n)
-        sorted_ids, score  = zip(*relevent_docs.most_common(n))
+            return relevent_docs.most_common(n)
+        sorted_ids, score = zip(*relevent_docs.most_common(n))
         # print("anchor", sorted_ids)
         # return self.get_page_titles(sorted_ids)
         return self.utils.get_page_titles(sorted_ids)
@@ -151,16 +153,16 @@ class Indexer:
         # for doc_id, sim_dict_val in sim_dict.items():
         for doc_id in sim_dict.keys():
             # try:
-            sim_dict[doc_id] = sim_dict[doc_id] * self.nf[doc_id][0] # * query_norm
+            sim_dict[doc_id] = sim_dict[doc_id] * self.nf[doc_id][0]  # * query_norm
             # except:
             #     pass
         if with_titles == False:
-          return sim_dict.most_common(N)
+            return sim_dict.most_common(N)
         sorted_ids, score = zip(*sim_dict.most_common(N))
         # return  self.get_page_titles(sorted_ids)
         return self.utils.get_page_titles(sorted_ids)
 
-    def get_page_titles(self, pages_ids): #################################################
+    def get_page_titles(self, pages_ids):  #################################################
         ''' Returns the title of the first, fourth, and fifth pages as ranked about
           by PageRank.
             Returns:
