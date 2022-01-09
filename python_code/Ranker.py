@@ -7,22 +7,26 @@ class Ranker:
     def __init__(self, path):
         self.page_rank_df = pd.read_csv(path, compression='gzip', header=None).rename({0: 'doc_id', 1: 'score'}, axis=1)
         self.page_rank_df.reset_index(drop=True, inplace=True)
+        self.page_rank_df = self.page_rank_df.to_dict('split')
+        self.page_rank_df = dict(self.page_rank_df['data'])
         # self.l = None
 
     def read_page_rank(self, path):
         self.page_rank_df = pd.read_csv(path)
 
-    def __iter__(self):
-        return self
 
-    def next(self):
-        if self.i < len(self.l):
-            self.i += 1
-            return self.l[self.i-1]
-        else:
-            raise StopIteration
 
     def get_page_rank_by_ids(self, page_ids):
+        lst = []
+        for page_id in page_ids:
+            try:
+                lst.append((page_id, self.page_rank_df[page_id]))
+            except:
+                lst.append((page_id, 0.15))
+                pass
+        return lst
+
+
         relevence = self.page_rank_df[self.page_rank_df['doc_id'].isin(page_ids)]
         outpot_lst = [-1] * len(page_ids)
         for index, row in relevence.iterrows():

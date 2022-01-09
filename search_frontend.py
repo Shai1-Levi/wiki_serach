@@ -6,6 +6,7 @@ from python_code.most_views import MostViews
 from python_code.Ranker import Ranker
 from python_code.Searcher import Searcher
 from python_code.BM25 import BM25_from_index
+from python_code.Utils import Utils
 
 
 class MyFlaskApp(Flask):
@@ -18,23 +19,28 @@ app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
 
 parser = Parser("")
 
-IDX = Indexer("/content/gDrive/MyDrive/project/postings_gcp", "body")
-IDXT = Indexer("/content/gDrive/MyDrive/project/postings_gcp_title2", "title")
-IDXA = Indexer("/content/gDrive/MyDrive/project/postings_gcp_anchor", "anchor")
+vm_path = "/content/gDrive/MyDrive/project/"  #drive
+# vm_path = "~/resources/"   # gcp vm instance
 
-pr_path = "gDrive/MyDrive/project/pr_part-00000-cee121d4-59d6-4bfd-842d-535dd4402d5e-c000.csv.gz"
+utils = Utils(vm_path)
+
+IDX = Indexer(vm_path + "postings_gcp", utils, "body")
+IDXT = Indexer(vm_path + "postings_gcp_title2", utils, "title")
+IDXA = Indexer(vm_path + "postings_gcp_anchor", utils, "anchor")
+
+pr_path = vm_path + "pr_part-00000-cee121d4-59d6-4bfd-842d-535dd4402d5e-c000.csv.gz"
 ranker = Ranker(pr_path)
 
-bm25_body = BM25_from_index(IDX.inv_idx,"/content/gDrive/MyDrive/project/postings_gcp/", k=5, b=0.75)
-bm25_title = BM25_from_index(IDXT.inv_idx,"/content/gDrive/MyDrive/project/postings_gcp_title2/")
-bm25_anchor = BM25_from_index(IDXA.inv_idx,"/content/gDrive/MyDrive/project/postings_gcp_anchor/")
+bm25_body = BM25_from_index(IDX.inv_idx, vm_path + "postings_gcp/", utils, k=5, b=0.75)
+bm25_title = BM25_from_index(IDXT.inv_idx, vm_path +"postings_gcp_title2/", utils,)
+bm25_anchor = BM25_from_index(IDXA.inv_idx, vm_path + "postings_gcp_anchor/", utils)
 
 bm25 = [bm25_body, bm25_title, bm25_anchor]
 
-most_views = MostViews()
+most_views = MostViews(vm_path)
 
 # searcher_best_effort = Searcher(IDX, IDXT, IDXA, ranker, most_views, parser, bm25)
-searcher_best_effort = Searcher()
+searcher_best_effort = Searcher(utils)
 
 @app.route("/search")
 def search():
@@ -60,7 +66,7 @@ def search():
         return jsonify(res)
     # BEGIN SOLUTION
     filtered_tokens = parser.filter_tokens(tokens=query, tokens2remove=parser.stop)
-    res = searcher_best_effort.search(filtered_tokens,IDX, IDXT, IDXA, ranker, most_views, parser,  bm25)
+    res = searcher_best_effort.search(filtered_tokens, IDX, IDXT, IDXA, ranker, most_views, parser, bm25)
     # expand = searcher_best_effort.search(filtered_tokens, IDX)
     # filtered_expand = parser.filter_tokens(tokens=" ".join(str(x) for x in expand), tokens2remove=parser.en_stopwords)
     # END SOLUTION

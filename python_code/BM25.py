@@ -7,13 +7,14 @@ from pathlib import Path
 import pickle
 from contextlib import closing
 from collections import Counter, defaultdict
+from python_code.Utils import Utils
 
 TUPLE_SIZE = 6  # We're going to pack the doc_id and tf values in this
 # many bytes.
 TF_MASK = 2 ** 16 - 1  # Masking the 16 low bits of an integer
 
 # DL = {}  # We're going to update and calculate this after each document. This will be usefull for the calculation of AVGDL (utilized in BM25)
-nf = pd.read_pickle("/content/gDrive/MyDrive/project/doc_body_length.pkl")
+# nf = Utils.get_nf("~/resources/")  #pd.read_pickle("/content/gDrive/MyDrive/project/doc_body_length.pkl")
 DL = {}
 
 # Let's start with a small block size of 30 bytes just to test things out.
@@ -204,12 +205,13 @@ class BM25_from_index:
     index: inverted index
     """
 
-    def __init__(self, index,path, k1=1.5, b=0.75):
+    def __init__(self, index, path, utils, k1=1.5, b=0.75):
         self.b = b
         self.k1 = k1
         self.index = index
-        self.N = len(nf)
-        self.AVGDL = sum(d_n for d_norm, d_n in nf.values()) / self.N
+        self.nf = utils.get_nf()
+        self.N = len(self.nf)
+        self.AVGDL = sum(d_n for d_norm, d_n in self.nf.values()) / self.N
         self.path = path
         # self.AVGDL = sum(DL.values()) / self.N
         # self.words, self.pls = zip(*self.index.posting_lists_iter(who_am_i='BM25'))
@@ -290,8 +292,8 @@ class BM25_from_index:
         score: float, bm25 score.
         """
         score = 0.0
-        if doc_id in nf.keys():
-            doc_len = nf[doc_id][1]
+        if doc_id in self.nf.keys():
+            doc_len = self.nf[doc_id][1]
         else:
             doc_len = 0
             # print("doc_len", doc_len)

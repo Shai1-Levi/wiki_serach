@@ -3,9 +3,9 @@ import pickle
 
 
 class MostViews:
-    def __init__(self, path="/content/gDrive/MyDrive/project/page_views_old"):
+    def __init__(self, path):
         self.wid2pv = Counter()
-        self.page_views_path = path
+        self.page_views_path = path + "page_views_old"
 
         # with open(path+"/index.pkl", 'rb') as f:
         #   self.mv_index = pickle.loads(f.read())

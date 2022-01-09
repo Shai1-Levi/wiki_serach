@@ -16,8 +16,8 @@ class Searcher:
     # self.parser = parser
     # super(Searcher, self).__init__(IDX,IDXT, IDXA) # *args, **kwargs)
     # self.__dict__ = self
-    def __init__(self):
-        self.titles = pd.read_pickle("/content/gDrive/MyDrive/project/titles.pkl")
+    def __init__(self, utils):
+        self.utils = utils
 
     def search(self, query, IDX, IDXT, IDXA, pr, mv, parser, bm25):
         # query1 = self.expand_query(query)
@@ -42,7 +42,7 @@ class Searcher:
         # msi = self.merge_score(bm25_title_dict, bm25_body_dict, a=0.85, b=0.15, N = None)
         # msi,_ = zip(*self.merge_score(msi, bm25_anchor_dict, a=0.15, b=0.85, N = 100))
         msi, _ = zip(*bm25_body_dict)
-        return self.get_page_titles(msi)
+        return self.utils.get_page_titles(msi)
         # return self.merge_score(msi, initial_lst_tup_body_anchor, a=0.8, b=0.2)
         # return self.merge_score_pr_or_mv(msi, pr, a=0.8,b=0.2)
 

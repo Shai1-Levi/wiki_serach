@@ -62,15 +62,16 @@ class MultiFileWriter:
 
 class MultiFileReader:
     """ Sequential binary reader of multiple files of up to BLOCK_SIZE each. """
-    def __init__(self):
+    def __init__(self, path):
         self._open_files = {}
+        self.path = path
 
     def read(self, locs, n_bytes):
         b = []
         for f_name, offset in locs:
             if f_name not in self._open_files:
-                x = "/content/gDrive/MyDrive/project/postings_gcp/"
-                self._open_files[f_name] = open(x+f_name, 'rb')
+                # x = "/content/gDrive/MyDrive/project/postings_gcp/"
+                self._open_files[f_name] = open(self.path+f_name, 'rb')
             f = self._open_files[f_name]
             f.seek(offset)
             n_read = min(n_bytes, BLOCK_SIZE - offset)

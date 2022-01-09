@@ -3,9 +3,10 @@ import os
 import pandas as pd
 
 
-class Util:
-    def __init__(self):
-        self.titles = pd.read_pickle("/content/gDrive/MyDrive/project/titles.pkl")
+class Utils:
+    def __init__(self, path):
+        self.titles = pd.read_pickle(path + "titles.pkl")
+        self.nf = pd.read_pickle(path + "doc_body_length.pkl")
 
     def get_page_titles(self, pages_ids):
         ''' Returns the title of the first, fourth, and fifth pages as ranked about
@@ -21,6 +22,23 @@ class Util:
             except:
                 pass
         return lst
+
+    def get_nf(self):
+        return self.nf
+
+    # def get_len(self):
+    #     return self.nf_n
+    #
+    # def get_nf_values(self):
+    #     return self.nf.values()
+    #
+    # def get_nf_keys(self):
+    #     return self.nf.keys()
+
+
+
+
+
 
 
 # Folder Path

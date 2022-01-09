@@ -32,16 +32,17 @@ from python_code.utils import Utils
 
 class Indexer:
 
-    def __init__(self, index_path, indexr_name="body"):
+    def __init__(self, index_path, utils, indexr_name="body"):
         self.inv_idx_path = index_path
         self.inv_idx_file = "index"
         if indexr_name == "body":
             self.inv_idx = IIG.read_index(self.inv_idx_path, self.inv_idx_file)
-            self.nf = pd.read_pickle("/content/gDrive/MyDrive/project/doc_body_length.pkl")
+            self.nf = pd.read_pickle(index_path + "doc_body_length.pkl")
         elif indexr_name == "title":
             self.inv_idx = IIC.read_index(self.inv_idx_path, self.inv_idx_file)
         elif indexr_name == "anchor":
             self.inv_idx = IIA.read_index(self.inv_idx_path, self.inv_idx_file)
+        self.utils = utils
         self.N = 6348910
         self.TUPLE_SIZE = 6
         self.TF_MASK = 2 ** 16 - 1  # Masking the 16 low bits of an integer
@@ -51,7 +52,7 @@ class Indexer:
         self.titles = ""
 
     def read_posting_list_title(self, w):
-        with closing(MRC()) as reader:
+        with closing(MRC(self.inv_idx_path)) as reader:
             locs = self.inv_idx.posting_locs[w]
             b = reader.read(locs, self.inv_idx.df[w] * self.TUPLE_SIZE)
             posting_list = []
@@ -63,7 +64,7 @@ class Indexer:
             return posting_list
 
     def read_posting_list_body(self, w):
-        with closing(MRG()) as reader:
+        with closing(MRG(self.inv_idx_path)) as reader:
             locs = self.inv_idx.posting_locs[w]
             b = reader.read(locs, self.inv_idx.df[w] * self.TUPLE_SIZE)
             posting_list = []
@@ -74,7 +75,7 @@ class Indexer:
             return posting_list
 
     def read_posting_list_anchor(self, w):
-        with closing(MRA()) as reader:
+        with closing(MRA(self.inv_idx_path)) as reader:
             locs = self.inv_idx.posting_locs[w]
             b = reader.read(locs, self.inv_idx.df[w] * self.TUPLE_SIZE)
             posting_list = []
@@ -97,7 +98,7 @@ class Indexer:
         sorted_ids, score  = zip(*relevent_docs.most_common(n))
         # print("title", sorted_ids)
         # return self.get_page_titles(sorted_ids)
-        return Util.get_page_titles(sorted_ids)
+        return self.utils.get_page_titles(sorted_ids)
 
     def get_binary_match_anchor(self, query_tokens, with_titles=True):
         relevent_docs = Counter()
@@ -112,7 +113,7 @@ class Indexer:
         sorted_ids, score  = zip(*relevent_docs.most_common(n))
         # print("anchor", sorted_ids)
         # return self.get_page_titles(sorted_ids)
-        return Util.get_page_titles(sorted_ids)
+        return self.utils.get_page_titles(sorted_ids)
 
     def tf_idf(self, term, word_freq, doc_id):
         idf = np.log2(self.N / self.inv_idx.df[term])
@@ -157,9 +158,9 @@ class Indexer:
           return sim_dict.most_common(N)
         sorted_ids, score = zip(*sim_dict.most_common(N))
         # return  self.get_page_titles(sorted_ids)
-        return Util.get_page_titles(sorted_ids)
+        return self.utils.get_page_titles(sorted_ids)
 
-    def get_page_titles(self, pages_ids):
+    def get_page_titles(self, pages_ids): #################################################
         ''' Returns the title of the first, fourth, and fifth pages as ranked about
           by PageRank.
             Returns:
