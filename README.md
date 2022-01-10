@@ -9,7 +9,7 @@ files:
   indexer.py is the class that contain the inverted index and add methods. like cossine similarity, binary match.
   Utils.py is class that upload and return the doc titles and return normalize doc for cossine similarty formula.
   BM25.py have a class that impliments the BM25 ranking method.
-  search_frontend.py is the "main" of the search engine app. in the app there are 6 routes:
+  search_frontend.py is the "main" of the search engine app. in the app there are 6 routes:     
     1. /search
     2. /search_body
     3. /search_title
