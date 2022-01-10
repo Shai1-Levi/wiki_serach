@@ -117,15 +117,15 @@ class Indexer:
           DataFrame: This function will return a DataFrame in the following shape: (# of queries, # of documents).
           Each value in the DataFrame will represent the cosine_similarity between given query and document.
         """
-        # query_counter = Counter(query)
-        # query_norm = np.linalg.norm(np.array(list(query_counter.values())))
+        query_counter = Counter(query)
+        query_norm = np.linalg.norm(np.array(list(query_counter.values())))
         sim_dict = Counter()  # key: (query,doc_id) , val: norm
         for term in query:
             for doc_id, w2cnt in self.read_posting_list_body(term):
                 sim_dict[doc_id] = sim_dict.get(doc_id, 0) + self.tf_idf(term, w2cnt, doc_id)  # W_tfidf_bm25
         for doc_id in sim_dict.keys():
             try:
-                sim_dict[doc_id] = sim_dict[doc_id] * self.nf[doc_id][0]  # * query_norm
+                sim_dict[doc_id] = sim_dict[doc_id] * np.power(self.nf[doc_id][0], 2) * query_norm
             except:
                 pass
         if with_titles == False:

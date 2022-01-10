@@ -33,14 +33,13 @@ pr_path = vm_path + "pr/pr_part-00000-cee121d4-59d6-4bfd-842d-535dd4402d5e-c000.
 ranker = Ranker(pr_path)
 
 bm25_body = BM25_from_index(IDX.inv_idx, vm_path + "postings_gcp/", utils, k1=5, b=0.75)
-bm25_title = BM25_from_index(IDXT.inv_idx, vm_path +"postings_gcp_title2/", utils)
-bm25_anchor = BM25_from_index(IDXA.inv_idx, vm_path + "postings_gcp_anchor/", utils)
+bm25_title = BM25_from_index(IDXT.inv_idx, vm_path +"postings_gcp_title2/", utils, k1=0.5, b=0.75)
+bm25_anchor = BM25_from_index(IDXA.inv_idx, vm_path + "postings_gcp_anchor/", utils, k1=0.5, b=0.75)
 
 bm25 = [bm25_body, bm25_title, bm25_anchor]
 
 most_views = MostViews(vm_path)
 
-# searcher_best_effort = Searcher(IDX, IDXT, IDXA, ranker, most_views, parser, bm25)
 searcher_best_effort = Searcher(utils)
 
 @app.route("/search")
@@ -68,8 +67,6 @@ def search():
     # BEGIN SOLUTION
     filtered_tokens = parser.filter_tokens(tokens=query, tokens2remove=parser.stop)
     res = searcher_best_effort.search(filtered_tokens,IDX, IDXT, IDXA, ranker, most_views, parser,  bm25)
-    # expand = searcher_best_effort.search(filtered_tokens, IDX)
-    # filtered_expand = parser.filter_tokens(tokens=" ".join(str(x) for x in expand), tokens2remove=parser.en_stopwords)
     # END SOLUTION
     return jsonify(res)
 

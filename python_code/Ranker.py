@@ -13,8 +13,6 @@ class Ranker:
     def read_page_rank(self, path):
         self.page_rank_df = pd.read_csv(path)
 
-
-
     def get_page_rank_by_ids(self, page_ids):
         lst = []
         for page_id in page_ids:
