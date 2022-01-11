@@ -16,6 +16,9 @@ files:
     4. /search_anchor
     5. /get_pagerank
     6. /get_pageview
+    
+# Link to engine: /http://34.136.131.91:8080
+
 
 # INCOMING
 query qexpansion with thesaurus or wordnet by nltk package
